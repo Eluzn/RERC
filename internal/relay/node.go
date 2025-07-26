@@ -104,7 +104,10 @@ func NewNode(config *Config) (*Node, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	node := &Node{
-		id:          fmt.Sprintf("relay-%x", crypto.Hash(keyPair.Public[:])[:8]),
+		id: func() string {
+			hash := crypto.Hash(keyPair.Public[:])
+			return fmt.Sprintf("relay-%x", hash[:8])
+		}(),
 		keyPair:     keyPair,
 		signingPair: signingPair,
 		hub:         network.NewHub(),
@@ -240,9 +243,6 @@ func (n *Node) handleAuth(conn *network.Connection, msg *protocol.Message) error
 	n.mu.Lock()
 	n.sessions[session.ID] = session
 	n.mu.Unlock()
-
-	// Update connection peer ID
-	conn = network.NewConnection(conn.(*network.Connection).conn, n.hub, msg.From)
 
 	response := protocol.NewMessage(
 		protocol.MessageTypeAuthResp,

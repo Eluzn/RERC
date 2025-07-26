@@ -17,21 +17,21 @@ const (
 	MessageTypeHandshakeResp MessageType = "handshake_response"
 	MessageTypeAuth          MessageType = "auth"
 	MessageTypeAuthResp      MessageType = "auth_response"
-	
+
 	// Peer discovery
 	MessageTypePeerDiscovery MessageType = "peer_discovery"
 	MessageTypePeerAnnounce  MessageType = "peer_announce"
-	
+
 	// Message relay
 	MessageTypeRelay         MessageType = "relay"
 	MessageTypeRelayAck      MessageType = "relay_ack"
 	MessageTypeDirectMessage MessageType = "direct_message"
-	
+
 	// Network management
-	MessageTypePing          MessageType = "ping"
-	MessageTypePong          MessageType = "pong"
-	MessageTypeError         MessageType = "error"
-	MessageTypeDisconnect    MessageType = "disconnect"
+	MessageTypePing       MessageType = "ping"
+	MessageTypePong       MessageType = "pong"
+	MessageTypeError      MessageType = "error"
+	MessageTypeDisconnect MessageType = "disconnect"
 )
 
 // Message represents the base protocol message structure
@@ -94,11 +94,11 @@ type PeerDiscoveryData struct {
 
 // RelayData contains encrypted message relay information
 type RelayData struct {
-	MessageID     string `json:"message_id"`
-	TargetPeerID  string `json:"target_peer_id"`
-	EncryptedData []byte `json:"encrypted_data"`
-	Signature     []byte `json:"signature"`
-	TTL           int    `json:"ttl"`
+	MessageID     string   `json:"message_id"`
+	TargetPeerID  string   `json:"target_peer_id"`
+	EncryptedData []byte   `json:"encrypted_data"`
+	Signature     []byte   `json:"signature"`
+	TTL           int      `json:"ttl"`
 	Route         []string `json:"route"`
 }
 
@@ -131,8 +131,8 @@ type PingData struct {
 
 // PongData contains pong response
 type PongData struct {
-	Timestamp     int64 `json:"timestamp"`
-	OriginalPing  int64 `json:"original_ping"`
+	Timestamp      int64 `json:"timestamp"`
+	OriginalPing   int64 `json:"original_ping"`
 	ProcessingTime int64 `json:"processing_time"`
 }
 
@@ -164,12 +164,12 @@ func (m *Message) GetHandshakeData() (*HandshakeData, error) {
 	if m.Type != MessageTypeHandshake {
 		return nil, ErrInvalidMessageType
 	}
-	
+
 	data, err := json.Marshal(m.Data)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var handshake HandshakeData
 	err = json.Unmarshal(data, &handshake)
 	return &handshake, err
@@ -180,12 +180,12 @@ func (m *Message) GetRelayData() (*RelayData, error) {
 	if m.Type != MessageTypeRelay {
 		return nil, ErrInvalidMessageType
 	}
-	
+
 	data, err := json.Marshal(m.Data)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var relay RelayData
 	err = json.Unmarshal(data, &relay)
 	return &relay, err
@@ -196,15 +196,31 @@ func (m *Message) GetDirectMessageData() (*DirectMessageData, error) {
 	if m.Type != MessageTypeDirectMessage {
 		return nil, ErrInvalidMessageType
 	}
-	
+
 	data, err := json.Marshal(m.Data)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var directMsg DirectMessageData
 	err = json.Unmarshal(data, &directMsg)
 	return &directMsg, err
+}
+
+// GetPeerDiscoveryData extracts peer discovery data from message
+func (m *Message) GetPeerDiscoveryData() (*PeerDiscoveryData, error) {
+	if m.Type != MessageTypePeerDiscovery {
+		return nil, ErrInvalidMessageType
+	}
+
+	data, err := json.Marshal(m.Data)
+	if err != nil {
+		return nil, err
+	}
+
+	var discovery PeerDiscoveryData
+	err = json.Unmarshal(data, &discovery)
+	return &discovery, err
 }
 
 // Common errors

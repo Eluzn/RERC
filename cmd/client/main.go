@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/rerc/distributed-relay-chat/internal/peer"
+	"github.com/eluzn/RERC/internal/peer"
 )
 
 func main() {
@@ -66,7 +66,7 @@ func main() {
 		} else {
 			fmt.Println("Unknown command. Type /help for available commands.")
 		}
-		
+
 		fmt.Print("> ")
 	}
 
@@ -110,10 +110,10 @@ func handleCommand(client *peer.Client, command string) {
 			fmt.Println("Usage: /msg <peer_id> <message>")
 			return
 		}
-		
+
 		peerID := parts[1]
 		message := strings.Join(parts[2:], " ")
-		
+
 		if err := client.SendMessage(peerID, []byte(message)); err != nil {
 			fmt.Printf("Error sending message: %v\n", err)
 		} else {

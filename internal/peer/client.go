@@ -9,16 +9,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 
 	"github.com/eluzn/RERC/internal/crypto"
 	"github.com/eluzn/RERC/internal/protocol"
 )
 
 const (
-	MaxMessageAge = 5 * time.Minute
-	ReconnectDelay = 5 * time.Second
+	MaxMessageAge    = 5 * time.Minute
+	ReconnectDelay   = 5 * time.Second
 	HandshakeTimeout = 10 * time.Second
 )
 
@@ -34,7 +34,7 @@ type Client struct {
 	mu          sync.RWMutex
 	ctx         context.Context
 	cancel      context.CancelFunc
-	
+
 	// Event handlers
 	onMessage    func(from string, message []byte)
 	onPeerUpdate func(peers []PeerInfo)
@@ -43,20 +43,20 @@ type Client struct {
 
 // PeerInfo contains information about a discovered peer
 type PeerInfo struct {
-	ID         string                `json:"id"`
-	PublicKey  [32]byte             `json:"public_key"`
-	SigningKey ed25519.PublicKey    `json:"signing_key"`
-	SharedKey  [32]byte             `json:"shared_key"`
-	LastSeen   time.Time            `json:"last_seen"`
-	IsRelay    bool                 `json:"is_relay"`
+	ID         string            `json:"id"`
+	PublicKey  [32]byte          `json:"public_key"`
+	SigningKey ed25519.PublicKey `json:"signing_key"`
+	SharedKey  [32]byte          `json:"shared_key"`
+	LastSeen   time.Time         `json:"last_seen"`
+	IsRelay    bool              `json:"is_relay"`
 }
 
 // Config holds the peer client configuration
 type Config struct {
-	RelayNodes []string
-	OnMessage  func(from string, message []byte)
+	RelayNodes   []string
+	OnMessage    func(from string, message []byte)
 	OnPeerUpdate func(peers []PeerInfo)
-	OnError    func(err error)
+	OnError      func(err error)
 }
 
 // NewClient creates a new peer client
@@ -75,17 +75,20 @@ func NewClient(config *Config) (*Client, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	client := &Client{
-		id:          fmt.Sprintf("peer-%x", crypto.Hash(keyPair.Public[:])[:8]),
-		keyPair:     keyPair,
-		signingPair: signingPair,
-		peers:       make(map[string]*PeerInfo),
-		sessions:    make(map[string]*crypto.KeyPair),
-		sequence:    0,
-		ctx:         ctx,
-		cancel:      cancel,
-		onMessage:   config.OnMessage,
+		id: func() string {
+			hash := crypto.Hash(keyPair.Public[:])
+			return fmt.Sprintf("peer-%x", hash[:8])
+		}(),
+		keyPair:      keyPair,
+		signingPair:  signingPair,
+		peers:        make(map[string]*PeerInfo),
+		sessions:     make(map[string]*crypto.KeyPair),
+		sequence:     0,
+		ctx:          ctx,
+		cancel:       cancel,
+		onMessage:    config.OnMessage,
 		onPeerUpdate: config.OnPeerUpdate,
-		onError:     config.OnError,
+		onError:      config.OnError,
 	}
 
 	return client, nil
@@ -266,23 +269,23 @@ func (c *Client) handleMessage(msg *protocol.Message) error {
 	switch msg.Type {
 	case protocol.MessageTypeHandshakeResp:
 		return c.handleHandshakeResponse(msg)
-		
+
 	case protocol.MessageTypeDirectMessage:
 		return c.handleDirectMessage(msg)
-		
+
 	case protocol.MessageTypePeerDiscovery:
 		return c.handlePeerDiscovery(msg)
-		
+
 	case protocol.MessageTypePong:
 		return c.handlePong(msg)
-		
+
 	case protocol.MessageTypeError:
 		return c.handleError(msg)
-		
+
 	default:
 		log.Printf("Unknown message type: %s", msg.Type)
 	}
-	
+
 	return nil
 }
 
@@ -413,24 +416,24 @@ func (c *Client) serializeEncryptedMessage(msg *crypto.EncryptedMessage) ([]byte
 	// In production, use a proper serialization format like protobuf
 	data := make([]byte, 0, len(msg.Nonce)+8+8+len(msg.Signature)+len(msg.Data))
 	data = append(data, msg.Nonce[:]...)
-	
+
 	// Add timestamp (8 bytes)
 	timestampBytes := make([]byte, 8)
 	for i := 0; i < 8; i++ {
 		timestampBytes[i] = byte(msg.Timestamp >> (8 * (7 - i)))
 	}
 	data = append(data, timestampBytes...)
-	
+
 	// Add sequence (8 bytes)
 	sequenceBytes := make([]byte, 8)
 	for i := 0; i < 8; i++ {
 		sequenceBytes[i] = byte(msg.Sequence >> (8 * (7 - i)))
 	}
 	data = append(data, sequenceBytes...)
-	
+
 	data = append(data, msg.Signature[:]...)
 	data = append(data, msg.Data...)
-	
+
 	return data, nil
 }
 
