@@ -1,4 +1,4 @@
-module github.com/rerc/distributed-relay-chat
+module github.com/eluzn/RERC
 
 go 1.21
 

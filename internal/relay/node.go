@@ -12,18 +12,18 @@ import (
 
 	"go.etcd.io/bbolt"
 
-	"github.com/rerc/distributed-relay-chat/internal/crypto"
-	"github.com/rerc/distributed-relay-chat/internal/network"
-	"github.com/rerc/distributed-relay-chat/internal/protocol"
+	"github.com/eluzn/RERC/internal/crypto"
+	"github.com/eluzn/RERC/internal/network"
+	"github.com/eluzn/RERC/internal/protocol"
 )
 
 const (
-	DatabaseName     = "relay.db"
-	PeersBucket      = "peers"
-	SessionsBucket   = "sessions"
-	MessageTTL       = 24 * time.Hour
-	SessionTimeout   = 30 * time.Minute
-	MaxRelayHops     = 5
+	DatabaseName   = "relay.db"
+	PeersBucket    = "peers"
+	SessionsBucket = "sessions"
+	MessageTTL     = 24 * time.Hour
+	SessionTimeout = 30 * time.Minute
+	MaxRelayHops   = 5
 )
 
 // Node represents a relay node in the distributed network
@@ -42,14 +42,14 @@ type Node struct {
 
 // PeerSession represents a connected peer session
 type PeerSession struct {
-	ID          string                   `json:"id"`
-	PublicKey   [32]byte                 `json:"public_key"`
-	SigningKey  ed25519.PublicKey        `json:"signing_key"`
-	SharedKey   [32]byte                 `json:"shared_key"`
-	Connection  *network.Connection      `json:"-"`
-	LastSeen    time.Time                `json:"last_seen"`
-	IsRelay     bool                     `json:"is_relay"`
-	Sequence    uint64                   `json:"sequence"`
+	ID         string              `json:"id"`
+	PublicKey  [32]byte            `json:"public_key"`
+	SigningKey ed25519.PublicKey   `json:"signing_key"`
+	SharedKey  [32]byte            `json:"shared_key"`
+	Connection *network.Connection `json:"-"`
+	LastSeen   time.Time           `json:"last_seen"`
+	IsRelay    bool                `json:"is_relay"`
+	Sequence   uint64              `json:"sequence"`
 }
 
 // Session represents an authenticated session
@@ -62,10 +62,10 @@ type Session struct {
 
 // Config holds the relay node configuration
 type Config struct {
-	ListenAddr string
+	ListenAddr   string
 	DatabasePath string
-	MaxPeers   int
-	IsBootstrap bool
+	MaxPeers     int
+	IsBootstrap  bool
 }
 
 // NewNode creates a new relay node
@@ -102,7 +102,7 @@ func NewNode(config *Config) (*Node, error) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	node := &Node{
 		id:          fmt.Sprintf("relay-%x", crypto.Hash(keyPair.Public[:])[:8]),
 		keyPair:     keyPair,
@@ -140,14 +140,14 @@ func (n *Node) Start(listenAddr string) error {
 // Stop gracefully stops the relay node
 func (n *Node) Stop() error {
 	log.Printf("Stopping relay node %s", n.id)
-	
+
 	n.cancel()
 	n.hub.Stop()
-	
+
 	if n.db != nil {
 		return n.db.Close()
 	}
-	
+
 	return nil
 }
 
@@ -156,22 +156,22 @@ func (n *Node) HandleMessage(conn *network.Connection, msg *protocol.Message) er
 	switch msg.Type {
 	case protocol.MessageTypeHandshake:
 		return n.handleHandshake(conn, msg)
-		
+
 	case protocol.MessageTypeAuth:
 		return n.handleAuth(conn, msg)
-		
+
 	case protocol.MessageTypeRelay:
 		return n.handleRelay(conn, msg)
-		
+
 	case protocol.MessageTypeDirectMessage:
 		return n.handleDirectMessage(conn, msg)
-		
+
 	case protocol.MessageTypePeerDiscovery:
 		return n.handlePeerDiscovery(conn, msg)
-		
+
 	case protocol.MessageTypePing:
 		return n.handlePing(conn, msg)
-		
+
 	default:
 		log.Printf("Unknown message type: %s", msg.Type)
 		return n.sendError(conn, "unknown_message_type", "Unknown message type")
@@ -229,7 +229,7 @@ func (n *Node) handleHandshake(conn *network.Connection, msg *protocol.Message) 
 func (n *Node) handleAuth(conn *network.Connection, msg *protocol.Message) error {
 	// In a production system, implement proper authentication
 	// For now, we'll accept all authenticated handshakes as valid
-	
+
 	session := &Session{
 		ID:        fmt.Sprintf("session-%d", time.Now().UnixNano()),
 		PeerID:    msg.From,
@@ -316,7 +316,7 @@ func (n *Node) handleRelay(conn *network.Connection, msg *protocol.Message) erro
 
 	// Relay to other nodes
 	relayMsg := protocol.NewMessage(protocol.MessageTypeRelay, msg.From, relayData)
-	
+
 	n.mu.RLock()
 	for peerID, peer := range n.peers {
 		if peer.IsRelay && peerID != msg.From && !contains(relayData.Route, peerID) {
@@ -395,13 +395,13 @@ func (n *Node) sendError(conn *network.Connection, code, message string) error {
 // healthHandler provides health check endpoint
 func (n *Node) healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	health := map[string]interface{}{
-		"status":     "healthy",
-		"node_id":    n.id,
-		"peers":      len(n.peers),
-		"sessions":   len(n.sessions),
-		"timestamp":  time.Now().Unix(),
+		"status":    "healthy",
+		"node_id":   n.id,
+		"peers":     len(n.peers),
+		"sessions":  len(n.sessions),
+		"timestamp": time.Now().Unix(),
 	}
 
 	json.NewEncoder(w).Encode(health)
@@ -410,7 +410,7 @@ func (n *Node) healthHandler(w http.ResponseWriter, r *http.Request) {
 // peersHandler provides peer information endpoint
 func (n *Node) peersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	
+
 	n.mu.RLock()
 	peers := make([]protocol.PeerInfo, 0, len(n.peers))
 	for _, peer := range n.peers {
@@ -444,10 +444,10 @@ func (n *Node) cleanupRoutine() {
 // cleanup removes expired sessions and inactive peers
 func (n *Node) cleanup() {
 	now := time.Now()
-	
+
 	n.mu.Lock()
 	defer n.mu.Unlock()
-	
+
 	// Clean up expired sessions
 	for sessionID, session := range n.sessions {
 		if now.After(session.ExpiresAt) {
@@ -455,7 +455,7 @@ func (n *Node) cleanup() {
 			log.Printf("Cleaned up expired session: %s", sessionID)
 		}
 	}
-	
+
 	// Clean up inactive peers
 	for peerID, peer := range n.peers {
 		if now.Sub(peer.LastSeen) > 30*time.Minute {

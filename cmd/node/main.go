@@ -7,15 +7,15 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/rerc/distributed-relay-chat/internal/relay"
+	"github.com/eluzn/RERC/internal/relay"
 )
 
 func main() {
 	var (
-		listenAddr   = flag.String("addr", ":8080", "Listen address for the relay node")
-		dbPath       = flag.String("db", "relay.db", "Database file path")
-		maxPeers     = flag.Int("peers", 1000, "Maximum number of connected peers")
-		isBootstrap  = flag.Bool("bootstrap", false, "Run as bootstrap node")
+		listenAddr  = flag.String("addr", ":8080", "Listen address for the relay node")
+		dbPath      = flag.String("db", "relay.db", "Database file path")
+		maxPeers    = flag.Int("peers", 1000, "Maximum number of connected peers")
+		isBootstrap = flag.Bool("bootstrap", false, "Run as bootstrap node")
 	)
 	flag.Parse()
 

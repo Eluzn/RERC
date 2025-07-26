@@ -12,8 +12,8 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/google/uuid"
 
-	"github.com/rerc/distributed-relay-chat/internal/crypto"
-	"github.com/rerc/distributed-relay-chat/internal/protocol"
+	"github.com/eluzn/RERC/internal/crypto"
+	"github.com/eluzn/RERC/internal/protocol"
 )
 
 const (

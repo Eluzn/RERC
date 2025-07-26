@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/rerc/distributed-relay-chat/internal/protocol"
+	"github.com/eluzn/RERC/internal/protocol"
 )
 
 const (
