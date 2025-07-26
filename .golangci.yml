@@ -1,0 +1,92 @@
+run:
+  timeout: 5m
+  issues-exit-code: 1
+  tests: true
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - gocyclo
+    - gofmt
+    - goimports
+    - misspell
+    - unparam
+    - unconvert
+    - goconst
+    - gocognit
+    - prealloc
+    - bodyclose
+    - gosec
+    - stylecheck
+    - revive
+    - exportloopref
+    - nilerr
+    - predeclared
+    - whitespace
+    - wrapcheck
+    - errorlint
+    - forbidigo
+    - forcetypeassert
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+  
+  gocognit:
+    min-complexity: 20
+  
+  gosec:
+    severity: medium
+    confidence: medium
+    excludes:
+      - G108 # Profiling endpoint automatically exposed
+  
+  govet:
+    check-shadowing: true
+  
+  revive:
+    min-confidence: 0.8
+  
+  stylecheck:
+    checks: ["all", "-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1021", "-ST1022"]
+  
+  wrapcheck:
+    ignoreSigs:
+      - .Errorf(
+      - errors.New(
+      - errors.Unwrap(
+      - .Wrap(
+      - .Wrapf(
+
+issues:
+  exclude-rules:
+    # Disable certain linters for test files
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - wrapcheck
+    
+    # Disable linters for generated files
+    - path: \.pb\.go
+      linters:
+        - stylecheck
+        - revive
+    
+    # Allow "magic numbers" in tests and configuration
+    - path: _test\.go
+      text: "Magic number"
+    
+    - path: config\.go
+      text: "Magic number"
+
+  max-issues-per-linter: 0
+  max-same-issues: 0

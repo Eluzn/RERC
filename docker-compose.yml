@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # Bootstrap relay node
+  bootstrap-relay:
+    build: .
+    container_name: rerc-bootstrap
+    ports:
+      - "8080:8080"
+    command: ["./rerc-node", "-addr", ":8080", "-bootstrap"]
+    volumes:
+      - bootstrap_data:/home/rerc/data
+    environment:
+      - RELAY_LOG_LEVEL=info
+    restart: unless-stopped
+    networks:
+      - rerc-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Additional relay nodes
+  relay-1:
+    build: .
+    container_name: rerc-relay-1
+    ports:
+      - "8081:8080"
+    command: ["./rerc-node", "-addr", ":8080"]
+    volumes:
+      - relay1_data:/home/rerc/data
+    environment:
+      - RELAY_LOG_LEVEL=info
+    depends_on:
+      - bootstrap-relay
+    restart: unless-stopped
+    networks:
+      - rerc-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  relay-2:
+    build: .
+    container_name: rerc-relay-2
+    ports:
+      - "8082:8080"
+    command: ["./rerc-node", "-addr", ":8080"]
+    volumes:
+      - relay2_data:/home/rerc/data
+    environment:
+      - RELAY_LOG_LEVEL=info
+    depends_on:
+      - bootstrap-relay
+    restart: unless-stopped
+    networks:
+      - rerc-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  relay-3:
+    build: .
+    container_name: rerc-relay-3
+    ports:
+      - "8083:8080"
+    command: ["./rerc-node", "-addr", ":8080"]
+    volumes:
+      - relay3_data:/home/rerc/data
+    environment:
+      - RELAY_LOG_LEVEL=info
+    depends_on:
+      - bootstrap-relay
+    restart: unless-stopped
+    networks:
+      - rerc-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  bootstrap_data:
+  relay1_data:
+  relay2_data:
+  relay3_data:
+
+networks:
+  rerc-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
